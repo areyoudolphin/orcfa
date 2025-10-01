@@ -8,110 +8,155 @@
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
 <div class="max-w-2xl w-full p-6 bg-gray-800 rounded-2xl shadow-lg">
-    <h1 class="text-3xl font-bold mb-6 text-center">Orcfa Core – AES‑256‑GCM</h1>
+    <h1 class="text-3xl font-bold mb-6 text-center">Orcfa Core – AES-256-GCM</h1>
 
-        <div class="flex justify-center gap-4 mb-6">
-                <button onclick="showEncrypt()" class="px-4 py-2 bg-blue-500 rounded-lg hover:bg-blue-600">Encrypt Message</button>
-                        <button onclick="showDecrypt()" class="px-4 py-2 bg-green-500 rounded-lg hover:bg-green-600">Decrypt Message</button>
-                            </div>
+    <div class="flex justify-center gap-4 mb-6">
+        <button onclick="showEncrypt()" class="px-4 py-2 bg-blue-500 rounded-lg hover:bg-blue-600">Encrypt Message</button>
+        <button onclick="showDecrypt()" class="px-4 py-2 bg-green-500 rounded-lg hover:bg-green-600">Decrypt Message</button>
+    </div>
 
-                                <div id="encryptSection" class="space-y-4" style="display:none;">
-                                        <h2 class="text-2xl font-semibold">Encrypt</h2>
-                                                <button onclick="generateKey()" class="px-4 py-2 bg-purple-500 rounded-lg hover:bg-purple-600">Generate Random Key</button>
-                                                        <input type="text" id="encryptKey" placeholder="Enter your shared key (hex)" class="w-full p-2 rounded-lg bg-gray-700 text-white" />
-                                                                <textarea id="plaintext" placeholder="Enter message to encrypt" class="w-full p-2 rounded-lg bg-gray-700 text-white"></textarea>
-                                                                        <button onclick="encryptMessage()" class="px-4 py-2 bg-blue-500 rounded-lg hover:bg-blue-600">Encrypt</button>
-                                                                                <pre id="encryptedOutput" class="p-4 bg-gray-700 rounded-lg"></pre>
-                                                                                    </div>
+    <!-- Encrypt Section -->
+    <div id="encryptSection" class="space-y-4" style="display:none;">
+        <h2 class="text-2xl font-semibold">Encrypt</h2>
+        <button onclick="generateKey()" class="px-4 py-2 bg-purple-500 rounded-lg hover:bg-purple-600">Generate Random Key</button>
+        <input type="text" id="encryptKey" placeholder="Enter your shared key (hex)" class="w-full p-2 rounded-lg bg-gray-700 text-white" />
+        <textarea id="plaintext" placeholder="Enter message to encrypt" class="w-full p-2 rounded-lg bg-gray-700 text-white"></textarea>
+        <button onclick="encryptMessage()" class="px-4 py-2 bg-blue-500 rounded-lg hover:bg-blue-600">Encrypt</button>
 
-                                                                                        <div id="decryptSection" class="space-y-4" style="display:none;">
-                                                                                                <h2 class="text-2xl font-semibold">Decrypt</h2>
-                                                                                                        <input type="text" id="decryptKey" placeholder="Enter your shared key (hex)" class="w-full p-2 rounded-lg bg-gray-700 text-white" />
-                                                                                                                <textarea id="encryptedText" placeholder="Paste encrypted message" class="w-full p-2 rounded-lg bg-gray-700 text-white"></textarea>
-                                                                                                                        <button onclick="decryptMessage()" class="px-4 py-2 bg-green-500 rounded-lg hover:bg-green-600">Decrypt</button>
-                                                                                                                                <pre id="decryptedOutput" class="p-4 bg-gray-700 rounded-lg"></pre>
-                                                                                                                                    </div>
-                                                                                                                                    </div>
+        <pre id="encryptedOutput" class="p-4 bg-gray-700 rounded-lg"></pre>
 
-                                                                                                                                    <script>
-                                                                                                                                    function showEncrypt() {
-                                                                                                                                        document.getElementById('encryptSection').style.display = 'block';
-                                                                                                                                            document.getElementById('decryptSection').style.display = 'none';
-                                                                                                                                            }
-                                                                                                                                            function showDecrypt() {
-                                                                                                                                                document.getElementById('encryptSection').style.display = 'none';
-                                                                                                                                                    document.getElementById('decryptSection').style.display = 'block';
-                                                                                                                                                    }
-                                                                                                                                                    async function hexToBytes(hex) {
-                                                                                                                                                        if (hex.length % 2 !== 0) throw "Invalid hex string";
-                                                                                                                                                            let bytes = new Uint8Array(hex.length / 2);
-                                                                                                                                                                for (let i = 0; i < hex.length; i += 2) {
-                                                                                                                                                                        bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
-                                                                                                                                                                            }
-                                                                                                                                                                                return bytes;
-                                                                                                                                                                                }
-                                                                                                                                                                                function generateKey() {
-                                                                                                                                                                                    let array = new Uint8Array(32);
-                                                                                                                                                                                        window.crypto.getRandomValues(array);
-                                                                                                                                                                                            let hexKey = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
-                                                                                                                                                                                                document.getElementById('encryptKey').value = hexKey;
-                                                                                                                                                                                                }
-                                                                                                                                                                                                async function encryptMessage() {
-                                                                                                                                                                                                    try {
-                                                                                                                                                                                                            let keyHex = document.getElementById("encryptKey").value.trim();
-                                                                                                                                                                                                                    let plaintext = document.getElementById("plaintext").value;
+        <!-- New Buttons -->
+        <div id="shareButtons" class="hidden flex gap-3">
+            <button onclick="copyEncrypted()" class="px-3 py-2 bg-yellow-500 rounded-lg hover:bg-yellow-600">📋 Copy</button>
+            <button onclick="shareEncrypted()" class="px-3 py-2 bg-teal-500 rounded-lg hover:bg-teal-600">📤 Share</button>
+        </div>
+    </div>
 
-                                                                                                                                                                                                                            let keyBytes = await hexToBytes(keyHex);
-                                                                                                                                                                                                                                    if (keyBytes.length !== 32) throw "Key must be 256 bits (64 hex characters)";
+    <!-- Decrypt Section -->
+    <div id="decryptSection" class="space-y-4" style="display:none;">
+        <h2 class="text-2xl font-semibold">Decrypt</h2>
+        <input type="text" id="decryptKey" placeholder="Enter your shared key (hex)" class="w-full p-2 rounded-lg bg-gray-700 text-white" />
+        <textarea id="encryptedText" placeholder="Paste encrypted message" class="w-full p-2 rounded-lg bg-gray-700 text-white"></textarea>
+        <button onclick="decryptMessage()" class="px-4 py-2 bg-green-500 rounded-lg hover:bg-green-600">Decrypt</button>
+        <pre id="decryptedOutput" class="p-4 bg-gray-700 rounded-lg"></pre>
+    </div>
+</div>
 
-                                                                                                                                                                                                                                            let iv = window.crypto.getRandomValues(new Uint8Array(12));
-                                                                                                                                                                                                                                                    let encoder = new TextEncoder();
-                                                                                                                                                                                                                                                            let encoded = encoder.encode(plaintext);
+<script>
+function showEncrypt() {
+    document.getElementById('encryptSection').style.display = 'block';
+    document.getElementById('decryptSection').style.display = 'none';
+}
+function showDecrypt() {
+    document.getElementById('encryptSection').style.display = 'none';
+    document.getElementById('decryptSection').style.display = 'block';
+}
+async function hexToBytes(hex) {
+    if (hex.length % 2 !== 0) throw "Invalid hex string";
+    let bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2) {
+        bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+    }
+    return bytes;
+}
+function generateKey() {
+    let array = new Uint8Array(32);
+    window.crypto.getRandomValues(array);
+    let hexKey = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+    document.getElementById('encryptKey').value = hexKey;
+}
+async function encryptMessage() {
+    try {
+        let keyHex = document.getElementById("encryptKey").value.trim();
+        let plaintext = document.getElementById("plaintext").value;
 
-                                                                                                                                                                                                                                                                    let key = await window.crypto.subtle.importKey(
-                                                                                                                                                                                                                                                                                "raw", keyBytes, {name: "AES-GCM"}, false, ["encrypt"]
-                                                                                                                                                                                                                                                                                        );
+        let keyBytes = await hexToBytes(keyHex);
+        if (keyBytes.length !== 32) throw "Key must be 256 bits (64 hex characters)";
 
-                                                                                                                                                                                                                                                                                                let ciphertext = await window.crypto.subtle.encrypt(
-                                                                                                                                                                                                                                                                                                            { name: "AES-GCM", iv: iv }, key, encoded
-                                                                                                                                                                                                                                                                                                                    );
+        let iv = window.crypto.getRandomValues(new Uint8Array(12));
+        let encoder = new TextEncoder();
+        let encoded = encoder.encode(plaintext);
 
-                                                                                                                                                                                                                                                                                                                            let combined = new Uint8Array(iv.length + ciphertext.byteLength);
-                                                                                                                                                                                                                                                                                                                                    combined.set(iv, 0);
-                                                                                                                                                                                                                                                                                                                                            combined.set(new Uint8Array(ciphertext), iv.length);
+        let key = await window.crypto.subtle.importKey(
+            "raw", keyBytes, {name: "AES-GCM"}, false, ["encrypt"]
+        );
 
-                                                                                                                                                                                                                                                                                                                                                    let base64 = btoa(String.fromCharCode(...combined));
-                                                                                                                                                                                                                                                                                                                                                            document.getElementById("encryptedOutput").innerText = base64;
-                                                                                                                                                                                                                                                                                                                                                                } catch (e) {
-                                                                                                                                                                                                                                                                                                                                                                        alert("Encryption error: " + e);
-                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                            async function decryptMessage() {
-                                                                                                                                                                                                                                                                                                                                                                                try {
-                                                                                                                                                                                                                                                                                                                                                                                        let keyHex = document.getElementById("decryptKey").value.trim();
-                                                                                                                                                                                                                                                                                                                                                                                                let encryptedBase64 = document.getElementById("encryptedText").value.trim();
+        let ciphertext = await window.crypto.subtle.encrypt(
+            { name: "AES-GCM", iv: iv }, key, encoded
+        );
 
-                                                                                                                                                                                                                                                                                                                                                                                                        let keyBytes = await hexToBytes(keyHex);
-                                                                                                                                                                                                                                                                                                                                                                                                                if (keyBytes.length !== 32) throw "Key must be 256 bits (64 hex characters)";
+        let combined = new Uint8Array(iv.length + ciphertext.byteLength);
+        combined.set(iv, 0);
+        combined.set(new Uint8Array(ciphertext), iv.length);
 
-                                                                                                                                                                                                                                                                                                                                                                                                                        let combined = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
-                                                                                                                                                                                                                                                                                                                                                                                                                                let iv = combined.slice(0, 12);
-                                                                                                                                                                                                                                                                                                                                                                                                                                        let ciphertext = combined.slice(12);
+        let base64 = btoa(String.fromCharCode(...combined));
+        document.getElementById("encryptedOutput").innerText = base64;
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                let key = await window.crypto.subtle.importKey(
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            "raw", keyBytes, {name: "AES-GCM"}, false, ["decrypt"]
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                    );
+        // Auto copy to clipboard
+        await navigator.clipboard.writeText(base64);
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            let plaintextBuffer = await window.crypto.subtle.decrypt(
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        { name: "AES-GCM", iv: iv }, key, ciphertext
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                );
+        // Show action buttons
+        document.getElementById("shareButtons").classList.remove("hidden");
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        let decoder = new TextDecoder();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                document.getElementById("decryptedOutput").innerText = decoder.decode(plaintextBuffer);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    } catch (e) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            alert("Decryption error: " + e);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </script>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </body>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </html>
+        alert("✅ Encrypted and copied to clipboard!");
+    } catch (e) {
+        alert("Encryption error: " + e);
+    }
+}
+async function decryptMessage() {
+    try {
+        let keyHex = document.getElementById("decryptKey").value.trim();
+        let encryptedBase64 = document.getElementById("encryptedText").value.trim();
+
+        let keyBytes = await hexToBytes(keyHex);
+        if (keyBytes.length !== 32) throw "Key must be 256 bits (64 hex characters)";
+
+        let combined = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+        let iv = combined.slice(0, 12);
+        let ciphertext = combined.slice(12);
+
+        let key = await window.crypto.subtle.importKey(
+            "raw", keyBytes, {name: "AES-GCM"}, false, ["decrypt"]
+        );
+
+        let plaintextBuffer = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv }, key, ciphertext
+        );
+
+        let decoder = new TextDecoder();
+        document.getElementById("decryptedOutput").innerText = decoder.decode(plaintextBuffer);
+    } catch (e) {
+        alert("Decryption error: " + e);
+    }
+}
+
+// 📋 Copy button
+async function copyEncrypted() {
+    let text = document.getElementById("encryptedOutput").innerText.trim();
+    if (text) {
+        await navigator.clipboard.writeText(text);
+        alert("📋 Copied to clipboard!");
+    }
+}
+
+// 📤 Share button (works on Android/iOS with system share sheet)
+async function shareEncrypted() {
+    let text = document.getElementById("encryptedOutput").innerText.trim();
+    if (!text) return alert("No encrypted text found.");
+
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: "Encrypted Message",
+                text: text
+            });
+        } catch (err) {
+            alert("Share cancelled.");
+        }
+    } else {
+        alert("❌ Sharing not supported in this browser. (But it's already copied!)");
+    }
+}
+</script>
+</body>
+</html>
